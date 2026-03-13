@@ -3,7 +3,7 @@ name: Daily Architect Scroll
 on:
   schedule:
     - cron: '0 2 * * *' # 9 PM EST (Toronto) is 2 AM UTC
-  workflow_dispatch: # Allows you to manually trigger the "First Run"
+  workflow_dispatch: 
 
 permissions:
   contents: write   
@@ -15,26 +15,23 @@ jobs:
     runs-on: ubuntu-latest
     
     env:
+      # Explicitly opt-in to the Node 24 runtime for all actions
       FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
       GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
 
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v6 # Node 24 Support
+        uses: actions/checkout@v6 # Latest: Node 24 support
 
       - name: Set up Python
-        uses: actions/setup-python@v6
+        uses: actions/setup-python@v6 # Latest: Node 24 support
         with:
           python-version: '3.12'
 
       - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install requests
+        run: pip install requests
 
       - name: Run Architect Script
-        env:
-          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
         run: python send_intel.py
 
       - name: Commit & Push Progress
@@ -46,13 +43,13 @@ jobs:
           git push
 
       - name: Setup Pages
-        uses: actions/configure-pages@v5 # Node 24 Support
+        uses: actions/configure-pages@v5 # Verified for Node 24
 
       - name: Upload Artifact
-        uses: actions/upload-pages-artifact@v3
+        uses: actions/upload-pages-artifact@v3 # Standard for Pages
         with:
           path: './docs'
 
       - name: Deploy to GitHub Pages
         id: deployment
-        uses: actions/deploy-pages@v4
+        uses: actions/deploy-pages@v4 # Latest stable deploy action
