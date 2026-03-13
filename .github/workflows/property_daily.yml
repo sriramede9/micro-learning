@@ -1,4 +1,4 @@
-name: Asset Architect Daily
+name: 🏠 Property Intelligence Terminal
 on:
   schedule:
     - cron: '0 1 * * *' # 8 PM EST
@@ -8,18 +8,33 @@ jobs:
   build:
     runs-on: ubuntu-latest
     env:
-      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
       GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
     steps:
-      - uses: actions/checkout@v6
-      - uses: actions/setup-python@v6
+      - uses: actions/checkout@v4
+
+      - name: Setup Python
+        uses: actions/setup-python@v5
         with:
           python-version: '3.12'
-      - run: pip install requests
-      - run: python scripts/property_intel.py
-      - run: |
+
+      - name: Install Dependencies
+        run: pip install requests markdown
+
+      - name: 🔥 RUN ALL ENGINES
+        run: python run_all.py  # This triggers the manager you wrote!
+
+      - name: Commit & Push All Reports
+        run: |
           git config --global user.name "Asset-Bot"
           git config --global user.email "bot@github.com"
-          git add property_progress.json docs/property.html
-          git commit -m "🏠 Property Update [skip ci]" || echo "No changes"
+          git add reports/ docs/ progress.json
+          git commit -m "🏠 Full Property Intelligence Update [skip ci]" || echo "No changes"
           git push
+
+      - name: Upload to GitHub Pages
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: './docs'
+
+      - name: Deploy to GitHub Pages
+        uses: actions/deploy-pages@v4
