@@ -38,10 +38,30 @@ Format:
 """
 
 # 3. Call Gemini
+# 3. Call Gemini
 api_key = os.getenv("GEMINI_API_KEY")
 url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={api_key}"
+
 response = requests.post(url, json={"contents": [{"parts": [{"text": prompt}]}]})
-intel = response.json()['candidates'][0]['content']['parts'][0]['text']
+data = response.json()
+
+# --- DEFENSIVE CHECK ---
+if 'candidates' in data and data['candidates']:
+    intel = data['candidates'][0]['content']['parts'][0]['text']
+    
+    # 4. Append to your "Social Feed"
+    with open('docs/index.md', 'a') as f:
+        f.write(f"\n\n---\n# 🚀 Day {state['day']}: {current_pillar}\n*Generated on {datetime.now().strftime('%Y-%m-%d')}*\n\n{intel}")
+    
+    # 5. Save State (Only if successful!)
+    state['day'] += 1
+    state['pillar_idx'] = (state['pillar_idx'] + 1) % len(PILLARS)
+    with open(PROGRESS_FILE, 'w') as f:
+        json.dump(state, f)
+else:
+    print("❌ API Error or Safety Block!")
+    print(json.dumps(data, indent=2)) # This will show the REAL error in your GitHub Logs
+    exit(1) # Tell GitHub Actions the run failed
 
 # 4. Append to your "Social Feed"
 with open('docs/index.md', 'a') as f:
