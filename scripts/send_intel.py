@@ -94,10 +94,15 @@ for model in ordered_targets:
         print(f"✅ Success with {successful_model}!")
         break
     else:
-        error_msg = data.get('error', {}).get('message', 'Unknown Error')
-        print(f"⚠️ {model} failed: {error_msg}")
-        time.sleep(1) # Tiny backoff before next attempt
-
+        error = data.get('error', {})
+        # ADDED: Quota/Rate Limit handling
+        if error.get('code') == 429:
+            print(f"⏳ Quota hit on {model}. Waiting 5s for backoff...")
+            time.sleep(5) 
+        else:
+            print(f"⚠️ {model} failed: {error.get('message', 'Unknown Error')}")
+            time.sleep(1)
+            
 # 5. Output and State Update
 if intel:
     # 1. Convert Markdown to clean HTML
