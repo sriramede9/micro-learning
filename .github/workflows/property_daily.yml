@@ -1,47 +1,25 @@
-name: 🏠 Property Intelligence Terminal
-on:
-  schedule:
-    - cron: '0 1 * * *' # 8 PM EST
-  workflow_dispatch:
+import subprocess
+import sys
 
-permissions:
-  contents: write   # Allows pushing commits to the repo
-  pages: write      # Allows deploying to GitHub Pages
-  id-token: write   # Required for secure OIDC deployment
+scripts = [
+    "scripts/appraisal_engine.py",
+    "scripts/market_radar.py",
+    "scripts/policy_scanner.py",
+    "scripts/catalyst_tracker.py",
+    "scripts/mortgage_optimizer.py",
+    "scripts/property_intel.py",
+    "scripts/radar_system.py",
+]
 
-jobs:
-  build:
-    runs-on: ubuntu-latest
-    env:
-      GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
-    steps:
-      - uses: actions/checkout@v4
+python = sys.executable
 
-      - name: Setup Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.12'
+for s in scripts:
+    print(f"🚀 EXECUTING: {s}", flush=True)
+    # Using subprocess.run is cleaner for GitHub Actions than os.system
+    result = subprocess.run([python, s])
+    
+    if result.returncode != 0:
+        print(f"❌ {s} failed with exit code {result.returncode}", flush=True)
 
-      - name: Install Dependencies
-        run: pip install requests markdown
-
-      - name: 🔥 RUN ALL ENGINES
-        env:
-          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }} # This maps the secret to the OS env
-        run: python run_all.py
-
-      - name: Commit & Push All Reports
-        run: |
-          git config --global user.name "Asset-Bot"
-          git config --global user.email "bot@github.com"
-          git add reports/ docs/ progress.json
-          git commit -m "🏠 Full Property Intelligence Update [skip ci]" || echo "No changes"
-          git push
-
-      - name: Upload to GitHub Pages
-        uses: actions/upload-pages-artifact@v3
-        with:
-          path: './docs'
-
-      - name: Deploy to GitHub Pages
-        uses: actions/deploy-pages@v4
+print("🎨 Finalizing Dashboard...", flush=True)
+subprocess.run([python, "scripts/build_dashboard.py"])
