@@ -1,0 +1,9 @@
+{
+  "metrics": [
+    {"metric": "Walk Score", "source": "walkscore.com"},
+    {"metric": "Crime Statistics", "source": "Peel Regional Police"},
+    {"metric": "School Rankings", "source": "Fraser Institute"},
+    {"metric": "Population Growth", "source": "Statistics Canada"},
+    {"metric": "Building Permits", "source": "City of Mississauga"}
+  ]
+}

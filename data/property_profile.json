@@ -1,0 +1,15 @@
+{
+  "address": "384 Lolita Gardens",
+  "city": "Mississauga",
+  "lot_frontage": 46.7,
+  "lot_depth": 121,
+  "zoning": "R3",
+  "beds": 4,
+  "baths": 4,
+  "basement": "Legal Basement 2 bedroom Finished with kitchen",
+  "parking": 7,
+  "kitchen": "Open house kitchen layout",
+  "walk-in closet": "Yes",
+  "Sum pump": "Yes",
+  "Gazebo":"Yes"
+}

@@ -33,13 +33,16 @@ jobs:
           pip install requests markdown
 
       - name: Run Architect Script
-        run: python send_intel.py
+        run: python scripts/send_intel.py
+
+      - name: Build Dashboard
+        run: python scripts/build_dashboard.py
 
       - name: Commit & Push Progress
         run: |
           git config --global user.name "Architect-Bot"
           git config --global user.email "bot@github.com"
-          git add progress.json docs/index.md
+          git add progress.json docs/
           git commit -m "🚀 Day Update [skip ci]" || echo "No changes to commit"
           git push
 

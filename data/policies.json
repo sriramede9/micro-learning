@@ -1,0 +1,20 @@
+{
+  "policies": [
+    {
+      "name": "Garden Suites",
+      "opportunity": "Rental income"
+    },
+    {
+      "name": "Missing Middle Housing",
+      "opportunity": "Duplex or triplex conversion"
+    },
+    {
+      "name": "Development Charge Waivers",
+      "opportunity": "Construction cost savings"
+    },
+    {
+      "name": "Transit Oriented Communities",
+      "opportunity": "Higher density near transit"
+    }
+  ]
+}

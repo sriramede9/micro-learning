@@ -16,7 +16,7 @@ jobs:
         with:
           python-version: '3.12'
       - run: pip install requests
-      - run: python property_intel.py
+      - run: python scripts/property_intel.py
       - run: |
           git config --global user.name "Asset-Bot"
           git config --global user.email "bot@github.com"

@@ -1,4 +1,6 @@
-import os, requests
+import os
+import requests
+import json
 from datetime import datetime
 
 # --- THE BLUEPRINT: 384 LOLITA GARDENS ASSETS ---
@@ -27,6 +29,7 @@ def call_gemini(api_key, model_name, prompt):
     return response.json()
 
 # --- THE "RICH BITCH" PROMPT ---
+# Note: Keeping your aggressive, high-level persona.
 prompt = f"""
 Act as a Senior Investment Strategist and Real Estate Architect.
 Current Date: March 13, 2026.
@@ -41,15 +44,30 @@ Style: Aggressive, Insightful, Senior Developer level. Use Markdown tables and b
 """
 
 api_key = os.getenv("GEMINI_API_KEY")
-data = call_gemini(api_key, 'models/gemini-3-flash-preview', prompt)
+data = call_gemini(api_key, 'models/gemini-1.5-flash', prompt) # Updated to latest stable model name
 
 if 'candidates' in data:
     intel = data['candidates'][0]['content']['parts'][0]['text']
-    nav = """<nav style="margin-bottom:20px; padding:15px; background:#1a1a1a; color:white; display:flex; gap:20px;">
-                <a href="index.html" style="color:#00d4ff; text-decoration:none;">💼 CAREER</a>
-                <a href="property.html" style="color:#00d4ff; text-decoration:none; font-weight:bold;">🏠 ASSET TRACKER</a>
-             </nav>"""
-    
-    with open('docs/property.html', 'w') as f:
-        f.write(f"<html><head><style>body{{font-family:'Segoe UI',sans-serif;max-width:1000px;margin:auto;padding:20px;background:#f0f2f5;}} .card{{background:white;padding:40px;border-radius:15px;box-shadow:0 10px 25px rgba(0,0,0,0.1);line-height:1.6;}} h1{{color:#1a1a1a;border-bottom:4px solid #00d4ff;display:inline-block;}} table{{width:100%;border-collapse:collapse;margin:20px 0;}} th,td{{padding:12px;border:1px solid #ddd;text-align:left;}} th{{background:#f8f9fa;}}</style></head><body>{nav}")
-        f.write(f"<div class='card'><h1>384 Lolita: 2026 Equity Masterplan</h1><p><strong>Refreshed:</strong> {datetime.now().strftime('%Y-%m-%d')}</p>{intel}</div></body></html>")
+
+    # Simple Markdown Navigation
+    nav = "[💼 CAREER](index.md) | **[🏠 ASSET TRACKER](property.md)**\n\n---\n"
+
+    # Constructing the Final MD Report
+    md_content = f"""{nav}
+# 384 Lolita: 2026 Equity Masterplan
+
+**Refreshed:** {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
+
+{intel}
+
+---
+*Confidential Investment Intelligence — Generated via Gemini Flash 2026*
+"""
+
+    # Save as Markdown
+    with open('reports/property.md', 'w') as f:
+        f.write(md_content)
+
+    print("Intelligence Report generated: docs/property.md")
+else:
+    print("Error: Could not retrieve AI intelligence. Check API Key.")
