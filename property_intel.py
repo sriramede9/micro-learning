@@ -1,69 +1,55 @@
-import os, json, requests, time
+import os, requests
 from datetime import datetime
 
-# --- CONFIG ---
-PROGRESS_FILE = 'property_progress.json'
-PILLARS = [
-    "LRT & Infrastructure Growth (Hazel McCallion/Dundas BRT)",
-    "Zoning & Intensification (Garden Suites/R3/ARUs)",
-    "Financial Optimization (Smith Maneuver/Equity Leverage)",
-    "Local Micro-Market (Lolita Gardens/Mississauga Valleys Sales)",
-    "Tenant & Cash Flow Strategy (Basement/Garden Suite yields)"
+# --- THE BLUEPRINT: 384 LOLITA GARDENS ASSETS ---
+ASSET_LIST = [
+    "Hazel McCallion LRT (18km line, 19 stops, 2026/27 rollout)",
+    "Dundas BRT (Key link for Kipling/Hamilton connectivity)",
+    "T&T Supermarket (High-density retail anchor)",
+    "Peter Gilgan Hospital (Canada's largest hospital, 950+ beds, 2,800+ staff)",
+    "TOC and Loop (Downtown Square One extension)",
+    "Cooksville GO Station (Major regional mobility hub)",
+    "Mississauga Valley CC & Library (Renovation completion 2027)",
+    "600-620 Lolita Gardens (25-storey tower intensification next door)",
+    "Cooksville & Iggy Kaneff Park (Public realm upgrades)",
+    "Fire Station 124 (Critical infrastructure/Safety)",
+    "Mary Fix Creek (Environmental/Flood resilience)",
+    "20 mins to Pearson Airport (Global logistic proximity)",
+    "Princess Royal Drive (Urban core link)",
+    "Garden Suite Updates (100% DC Waiver through Dec 2027)",
+    "Panchavati & Cedarbrae Park (Green space value)",
+    "Highway 403/QEW Proximity (Regional logistics link)"
 ]
-
-def get_live_models(api_key):
-    url = f"https://generativelanguage.googleapis.com/v1beta/models?key={api_key}"
-    try:
-        response = requests.get(url)
-        return [m['name'] for m in response.json().get('models', []) if 'generateContent' in m.get('supportedGenerationMethods', [])]
-    except: return []
 
 def call_gemini(api_key, model_name, prompt):
     url = f"https://generativelanguage.googleapis.com/v1beta/{model_name}:generateContent?key={api_key}"
     response = requests.post(url, json={"contents": [{"parts": [{"text": prompt}]}]})
     return response.json()
 
-# 1. State Management
-if not os.path.exists(PROGRESS_FILE):
-    with open(PROGRESS_FILE, 'w') as f: json.dump({"day": 1, "idx": 0}, f)
-with open(PROGRESS_FILE, 'r') as f: state = json.load(f)
-
-current_pillar = PILLARS[state['idx']]
-
-# 2. The Asset Prompt
+# --- THE "RICH BITCH" PROMPT ---
 prompt = f"""
-Act as a Real Estate Investment Strategist for 384 Lolita Gardens, Mississauga.
-Today's Focus: {current_pillar}.
+Act as a Senior Investment Strategist and Real Estate Architect.
+Current Date: March 13, 2026.
+Target Property: 384 Lolita Gardens (Detached R3, 46.7x121ft lot).
 
-Property Context:
-- Lot: 46.7 x 121.78 ft | Zoning: R3 | Detached 2-Storey (4+2 Bed, 4 Bath).
-- Proximity: Hazel McCallion LRT, Dundas BRT, Cooksville GO, Mississauga Valley CC.
+1. CORE REVIEW: Analyze the equity multiplier for these assets: {", ".join(ASSET_LIST)}.
+2. HORIZON SCAN: Identify 3 NEW catalysts for 2026 (e.g., specific Mississauga 'Missing Middle' grants, TOC pre-zoning in Cooksville, or hospital staff rental demand).
+3. STRATEGIC QUESTIONS: Generate 3 'Million-Dollar Questions' for a city planner or private lender to unlock land value.
+4. WEALTH MOVE: Detail the 'Smith Maneuver' potential given current 2026 Bank of Canada rates (2.25%) and the 121ft lot depth.
 
-Provide:
-1. THE CATALYST: How today's topic specifically impacts the property's appraisal or equity.
-2. WEALTH MOVE: A specific action (e.g., Garden Suite feasibility, Smith Maneuver steps, or Permit applications).
-3. MARKET INTEL: What an owner in Mississauga Valleys should look for this week.
-4. "BULLETPROOF" FACTOR: One risk-mitigation strategy to ensure the asset survives a market shift.
+Style: Aggressive, Insightful, Senior Developer level. Use Markdown tables and bold headers.
 """
 
-# 3. Execution (Your Round Robin Logic)
 api_key = os.getenv("GEMINI_API_KEY")
-targets = ['models/gemini-3-flash-preview', 'models/gemini-2.5-flash', 'models/gemini-2.0-flash']
-available = get_live_models(api_key)
-ordered = [m for m in targets if m in available] or available[:3]
+data = call_gemini(api_key, 'models/gemini-3-flash-preview', prompt)
 
-intel = None
-for model in ordered:
-    data = call_gemini(api_key, model, prompt)
-    if 'candidates' in data:
-        intel = data['candidates'][0]['content']['parts'][0]['text']
-        break
-
-if intel:
-    # Save as a separate HTML file for your Asset Feed
-    with open('docs/property.html', 'a') as f:
-        f.write(f"<div class='card'><h2>Day {state['day']}: {current_pillar}</h2>{intel}</div>")
+if 'candidates' in data:
+    intel = data['candidates'][0]['content']['parts'][0]['text']
+    nav = """<nav style="margin-bottom:20px; padding:15px; background:#1a1a1a; color:white; display:flex; gap:20px;">
+                <a href="index.html" style="color:#00d4ff; text-decoration:none;">💼 CAREER</a>
+                <a href="property.html" style="color:#00d4ff; text-decoration:none; font-weight:bold;">🏠 ASSET TRACKER</a>
+             </nav>"""
     
-    state['day'] += 1
-    state['idx'] = (state['idx'] + 1) % len(PILLARS)
-    with open(PROGRESS_FILE, 'w') as f: json.dump(state, f)
+    with open('docs/property.html', 'w') as f:
+        f.write(f"<html><head><style>body{{font-family:'Segoe UI',sans-serif;max-width:1000px;margin:auto;padding:20px;background:#f0f2f5;}} .card{{background:white;padding:40px;border-radius:15px;box-shadow:0 10px 25px rgba(0,0,0,0.1);line-height:1.6;}} h1{{color:#1a1a1a;border-bottom:4px solid #00d4ff;display:inline-block;}} table{{width:100%;border-collapse:collapse;margin:20px 0;}} th,td{{padding:12px;border:1px solid #ddd;text-align:left;}} th{{background:#f8f9fa;}}</style></head><body>{nav}")
+        f.write(f"<div class='card'><h1>384 Lolita: 2026 Equity Masterplan</h1><p><strong>Refreshed:</strong> {datetime.now().strftime('%Y-%m-%d')}</p>{intel}</div></body></html>")
