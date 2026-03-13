@@ -15,10 +15,23 @@ jobs:
         env:
           GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
         run: python send_intel.py
-      - name: Commit & Push
+
+      - name: Commit Progress
         run: |
           git config --global user.name "Architect-Bot"
           git config --global user.email "bot@github.com"
-          git add .
-          git commit -m "Day ${{ github.run_number }} Update" || echo "No changes"
+          git add progress.json docs/index.md
+          git commit -m "Day Update" || echo "No changes"
           git push
+
+      - name: Setup Pages
+        uses: actions/configure-pages@v4
+
+      - name: Upload artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: './docs' # This points to your scrollable feed folder
+
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
