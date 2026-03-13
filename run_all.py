@@ -1,25 +1,32 @@
 import subprocess
-import sys
+import time
+from scripts.utils.limiter import GlobalRateLimiter
+
+# Initialize the shared limiter
+limiter = GlobalRateLimiter(rpm_limit=5) # Being conservative for Free Tier
 
 scripts = [
     "scripts/appraisal_engine.py",
-    "scripts/market_radar.py",
     "scripts/policy_scanner.py",
-    "scripts/catalyst_tracker.py",
-    "scripts/mortgage_optimizer.py",
-    "scripts/property_intel.py",
-    "scripts/radar_system.py",
+    "scripts/property_intel.py",  # Heavy Logic
+    "scripts/radar_system.py"
 ]
 
-python = sys.executable
+print("🚀 Starting Smart Intelligence Pipeline...")
 
-for s in scripts:
-    print(f"🚀 EXECUTING: {s}", flush=True)
-    # Using subprocess.run is cleaner for GitHub Actions than os.system
-    result = subprocess.run([python, s])
+for script in scripts:
+    # STEP 1: Wait for global slot
+    limiter.wait_for_slot()
+    
+    # STEP 2: Execute script
+    print(f"📡 Executing: {script}")
+    result = subprocess.run(["python", script])
     
     if result.returncode != 0:
-        print(f"❌ {s} failed with exit code {result.returncode}", flush=True)
+        print(f"❌ {script} failed. Switching to cooldown mode...")
+        time.sleep(30) # Hard reset cooldown if we hit a wall
+    
+    # STEP 3: Mandatory 'pacing' sleep to protect the TPM (Tokens Per Minute)
+    time.sleep(5) 
 
-print("🎨 Finalizing Dashboard...", flush=True)
-subprocess.run([python, "scripts/build_dashboard.py"])
+print("🎨 Finalizing Dashboard...")
