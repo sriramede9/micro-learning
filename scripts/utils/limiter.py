@@ -16,18 +16,18 @@ class GlobalRateLimiter:
             with open(self.STATE_FILE, 'r') as f:
                 self.state = json.load(f)
         else:
-            self.state = {"tokens": rpm_limit, "last_refill": time.time()}
+            # FIX: Use self.rpm_limit here
+            self.state = {"tokens": self.rpm_limit, "last_refill": time.time()}
 
     def _save_state(self):
         with open(self.STATE_FILE, 'w') as f:
             json.dump(self.state, f)
 
     def wait_for_slot(self):
-        """Standard 'Leaky Bucket' logic: refill tokens based on time passed."""
         now = time.time()
         elapsed = now - self.state["last_refill"]
         
-        # Refill 1 token every (60/rpm_limit) seconds
+        # Refill tokens based on time passed
         refill_amount = elapsed * (self.rpm_limit / 60.0)
         self.state["tokens"] = min(self.rpm_limit, self.state["tokens"] + refill_amount)
         self.state["last_refill"] = now
