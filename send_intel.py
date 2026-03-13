@@ -100,8 +100,10 @@ for model in ordered_targets:
 # 5. Output and State Update
 if intel:
     # Append to your "Social Feed"
-    with open('docs/index.md', 'a') as f:
-        f.write(f"\n\n---\n# 🚀 Day {state['day']}: {current_pillar}\n*Generated via {successful_model} on {datetime.now().strftime('%Y-%m-%d')}*\n\n{intel}")
+    # In send_intel.py, update your file write:
+with open('docs/index.html', 'a') as f:
+    # Adding simple HTML tags so the browser renders it
+    f.write(f"<html><body><h1>Day {state['day']}</h1><p>{intel}</p></body></html>")
     
     # Save State
     state['day'] += 1
