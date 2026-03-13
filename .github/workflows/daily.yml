@@ -3,30 +3,29 @@ name: Daily Architect Scroll
 on:
   schedule:
     - cron: '0 2 * * *' # 9 PM EST (Toronto) is 2 AM UTC
-  workflow_dispatch: # Allows you to run it manually to test
+  workflow_dispatch: # Allows you to manually trigger the "First Run"
 
 permissions:
-  contents: write   # Allows the bot to save progress.json and docs/index.md
-  pages: write      # Allows the bot to trigger the GitHub Pages build
-  id-token: write   # Required for authentication with GitHub Pages
+  contents: write   
+  pages: write      
+  id-token: write   
 
 jobs:
   build:
     runs-on: ubuntu-latest
     
-    # Opt-in to Node 24 early to avoid deprecation warnings
     env:
       FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
       GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
 
     steps:
       - name: Checkout Repository
-        uses: actions/checkout@v6 # Updated for Node 24 support
+        uses: actions/checkout@v6 # Node 24 Support
 
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6 # Node 24 Support
         with:
-          python-version: '3.10'
+          python-version: '3.12' # Using the 2026 stable Python version
 
       - name: Run Architect Script
         run: python send_intel.py
@@ -40,7 +39,7 @@ jobs:
           git push
 
       - name: Setup Pages
-        uses: actions/configure-pages@v5
+        uses: actions/configure-pages@v5 # Node 24 Support
 
       - name: Upload Artifact
         uses: actions/upload-pages-artifact@v3
