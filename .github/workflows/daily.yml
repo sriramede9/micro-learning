@@ -46,7 +46,7 @@ jobs:
         uses: actions/configure-pages@v5 # Verified for Node 24
 
       - name: Upload Artifact
-        uses: actions/upload-pages-artifact@v3 # Standard for Pages
+        uses: actions/upload-pages-artifact@v4 # Standard for Pages
         with:
           path: './docs'
 
