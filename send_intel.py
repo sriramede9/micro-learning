@@ -98,18 +98,26 @@ for model in ordered_targets:
         time.sleep(1) # Tiny backoff before next attempt
 
 # 5. Output and State Update
+# 5. Output and State Update
 if intel:
-    # Append to your "Social Feed"
-    # In send_intel.py, update your file write:
-with open('docs/index.html', 'a') as f:
-    # Adding simple HTML tags so the browser renders it
-    f.write(f"<html><body><h1>Day {state['day']}</h1><p>{intel}</p></body></html>")
+    # Everything below this must be indented by 4 spaces
+    # We use 'a' to append, but for the first run, ensure the file exists
+    with open('docs/index.html', 'a') as f:
+        # Wrapping in basic HTML so GitHub Pages displays it correctly
+        f.write(f"""
+        <div style="font-family: sans-serif; max-width: 800px; margin: auto; padding: 20px; border-bottom: 1px solid #eee;">
+            <h1>🚀 Day {state['day']}: {current_pillar}</h1>
+            <p style="color: #666;"><em>Generated via {successful_model} on {datetime.now().strftime('%Y-%m-%d')}</em></p>
+            <div style="line-height: 1.6;">{intel.replace('\n', '<br>')}</div>
+        </div>
+        """)
     
-    # Save State
+    # Save State (Must also be indented to stay inside the 'if')
     state['day'] += 1
     state['pillar_idx'] = (state['pillar_idx'] + 1) % len(PILLARS)
     with open(PROGRESS_FILE, 'w') as f:
         json.dump(state, f)
 else:
+    # This runs if intel is None
     print("🚨 All models exhausted. No intel generated.")
     exit(1)
