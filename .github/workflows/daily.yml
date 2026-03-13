@@ -1,0 +1,58 @@
+import os
+import json
+import requests
+from datetime import datetime
+
+# 1. LOAD PROGRESS
+PROGRESS_FILE = 'progress.json'
+FEED_FILE = 'docs/index.md' # For GitHub Pages
+
+if not os.path.exists(PROGRESS_FILE):
+    with open(PROGRESS_FILE, 'w') as f:
+        json.dump({"day": 1, "level": "Senior", "pillar_idx": 0}, f)
+
+with open(PROGRESS_FILE, 'r') as f:
+    state = json.load(f)
+
+PILLARS = [
+    "Modern Java (17-26) & Concurrency", 
+    "GCP & AWS Cloud Architectures",
+    "Distributed Systems & Payment Reliability",
+    "Spring AI & Enterprise RAG",
+    "MongoDB & High-Scale Persistence"
+]
+current_pillar = PILLARS[state['pillar_idx']]
+
+# 2. THE ULTIMATE ARCHITECT PROMPT
+prompt = f"""
+Act as a Principal Engineer for a global bank. Day {state['day']} topic: {current_pillar}.
+Target: Java 17 to 26 (Virtual threads, Pattern matching, HTTP/3).
+
+Provide:
+- SIMPSONS ANALOGY: A hilarious scenario explaining the tech.
+- TECHNICAL DEEP DIVE: Problems/Solutions and Advantages/Disadvantages.
+- BUTTERFLY EFFECT: How this one fix affects the "Big Picture" in a banking/tracking app.
+- CODE: Java 21+ Spring Boot snippet.
+- FOOD FOR THOUGHT: Explain a feature in (Uber/Amazon/Google Maps) using:
+    - Java/Spring Boot (Logic)
+    - MongoDB (Data)
+    - Spring AI (Intelligence)
+    - GCP/AWS (Scaling)
+"""
+
+# 3. GET AI CONTENT (Gemini Flash)
+api_key = os.getenv("GEMINI_API_KEY")
+url = f"https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key={api_key}"
+response = requests.post(url, json={"contents": [{"parts": [{"text": prompt}]}]})
+intel = response.json()['candidates'][0]['content']['parts'][0]['text']
+
+# 4. UPDATE THE "SCROLLABLE FEED"
+new_entry = f"\n\n---\n## 🚀 Day {state['day']}: {current_pillar} ({datetime.now().strftime('%Y-%m-%d')})\n{intel}"
+with open(FEED_FILE, 'a') as f:
+    f.write(new_entry)
+
+# 5. UPDATE PROGRESS
+state['day'] += 1
+state['pillar_idx'] = (state['pillar_idx'] + 1) % len(PILLARS)
+with open(PROGRESS_FILE, 'w') as f:
+    json.dump(state, f)
