@@ -3,56 +3,73 @@ import requests
 import json
 from datetime import datetime
 
-# --- THE BLUEPRINT: 384 LOLITA GARDENS ASSETS ---
+# --- ASSETS & PROMPT CONFIG ---
 ASSET_LIST = [
-    "Hazel McCallion LRT (18km line, 19 stops, 2026/27 rollout)",
-    "Dundas BRT (Key link for Kipling/Hamilton connectivity)",
-    "T&T Supermarket (High-density retail anchor)",
-    "Peter Gilgan Hospital (Canada's largest hospital, 950+ beds, 2,800+ staff)",
-    "TOC and Loop (Downtown Square One extension)",
-    "Cooksville GO Station (Major regional mobility hub)",
-    "Mississauga Valley CC & Library (Renovation completion 2027)",
-    "600-620 Lolita Gardens (25-storey tower intensification next door)",
-    "Cooksville & Iggy Kaneff Park (Public realm upgrades)",
-    "Fire Station 124 (Critical infrastructure/Safety)",
-    "Mary Fix Creek (Environmental/Flood resilience)",
-    "20 mins to Pearson Airport (Global logistic proximity)",
-    "Princess Royal Drive (Urban core link)",
+    "Hazel McCallion LRT (2026/27 rollout)",
+    "Peter Gilgan Hospital (Canada's largest hospital)",
+    "600-620 Lolita Gardens (25-storey tower intensification)",
     "Garden Suite Updates (100% DC Waiver through Dec 2027)",
-    "Panchavati & Cedarbrae Park (Green space value)",
-    "Highway 403/QEW Proximity (Regional logistics link)"
+    "20 mins to Pearson Airport"
 ]
 
-def call_gemini(api_key, model_name, prompt):
-    url = f"https://generativelanguage.googleapis.com/v1beta/{model_name}:generateContent?key={api_key}"
-    response = requests.post(url, json={"contents": [{"parts": [{"text": prompt}]}]})
-    return response.json()
-
-# --- THE "RICH BITCH" PROMPT ---
-# Note: Keeping your aggressive, high-level persona.
 prompt = f"""
-Act as a Senior Investment Strategist and Real Estate Architect.
-Current Date: March 13, 2026.
+Act as a Senior Investment Strategist.
 Target Property: 384 Lolita Gardens (Detached R3, 46.7x121ft lot).
-
-1. CORE REVIEW: Analyze the equity multiplier for these assets: {", ".join(ASSET_LIST)}.
-2. HORIZON SCAN: Identify 3 NEW catalysts for 2026 (e.g., specific Mississauga 'Missing Middle' grants, TOC pre-zoning in Cooksville, or hospital staff rental demand).
-3. STRATEGIC QUESTIONS: Generate 3 'Million-Dollar Questions' for a city planner or private lender to unlock land value.
-4. WEALTH MOVE: Detail the 'Smith Maneuver' potential given current 2026 Bank of Canada rates (2.25%) and the 121ft lot depth.
-
-Style: Aggressive, Insightful, Senior Developer level. Use Markdown tables and bold headers.
+1. Analyze equity multipliers for: {", ".join(ASSET_LIST)}.
+2. Identify 3 NEW catalysts for 2026.
+3. Detail 'Smith Maneuver' potential with 2026 rates (2.25%).
+Style: Aggressive, Insightful. Use Markdown tables and bold headers.
 """
 
-api_key = os.getenv("GEMINI_API_KEY")
-data = call_gemini(api_key, 'models/gemini-1.5-flash', prompt) # Updated to latest stable model name
+# --- MODEL CONFIG ---
+MODEL_PRIORITY = [
+    'models/gemini-2.0-flash-exp',
+    'models/gemini-2.0-flash',
+    'models/gemini-1.5-flash',
+    'models/gemini-1.5-pro'
+]
 
-if 'candidates' in data:
+def get_best_model(api_key):
+    url = f"https://generativelanguage.googleapis.com/v1beta/models?key={api_key}"
+    try:
+        response = requests.get(url, timeout=10).json()
+        models = [m['name'] for m in response.get('models', [])
+                  if 'generateContent' in m.get('supportedGenerationMethods', [])]
+        for target in MODEL_PRIORITY:
+            if target in models:
+                return target
+        return models[0] if models else None
+    except Exception as e:
+        print(f"⚠️ Model fetch failed, using fallback: {e}")
+        return 'models/gemini-1.5-flash'
+
+def call_gemini(api_key, model_name, prompt_text):
+    url = f"https://generativelanguage.googleapis.com/v1beta/{model_name}:generateContent?key={api_key}"
+    response = requests.post(url, json={"contents": [{"parts": [{"text": prompt_text}]}]}, timeout=30)
+    return response.json()
+
+# --- EXECUTION ---
+api_key = os.getenv("GEMINI_API_KEY")
+selected_model = get_best_model(api_key)
+
+print(f"🤖 Using model: {selected_model}")
+
+if not api_key:
+    print("❌ Error: GEMINI_API_KEY not found in environment.")
+    exit(1)
+
+try:
+    data = call_gemini(api_key, selected_model, prompt)
+except Exception as e:
+    print(f"❌ Network/Request Error: {e}")
+    data = {}
+
+# Check for valid response candidates
+if 'candidates' in data and len(data['candidates']) > 0:
     intel = data['candidates'][0]['content']['parts'][0]['text']
 
-    # Simple Markdown Navigation
     nav = "[💼 CAREER](index.md) | **[🏠 ASSET TRACKER](property.md)**\n\n---\n"
 
-    # Constructing the Final MD Report
     md_content = f"""{nav}
 # 384 Lolita: 2026 Equity Masterplan
 
@@ -61,13 +78,16 @@ if 'candidates' in data:
 {intel}
 
 ---
-*Confidential Investment Intelligence — Generated via Gemini Flash 2026*
+*Confidential Investment Intelligence — Generated via Gemini 2026*
 """
 
-    # Save as Markdown
+    # Save to reports directory (build_dashboard.py looks here)
+    os.makedirs('reports', exist_ok=True)
     with open('reports/property.md', 'w') as f:
         f.write(md_content)
 
-    print("Intelligence Report generated: docs/property.md")
+    print("✅ Intelligence Report generated: reports/property.md")
+
 else:
-    print("Error: Could not retrieve AI intelligence. Check API Key.")
+    print(f"🚨 API Failure or empty response: {json.dumps(data, indent=2)}")
+    exit(1)
