@@ -1,36 +1,51 @@
 name: Daily Architect Scroll
+
 on:
   schedule:
     - cron: '0 2 * * *' # 9 PM EST (Toronto) is 2 AM UTC
   workflow_dispatch: # Allows you to run it manually to test
 
+permissions:
+  contents: write   # Allows the bot to save progress.json and docs/index.md
+  pages: write      # Allows the bot to trigger the GitHub Pages build
+  id-token: write   # Required for authentication with GitHub Pages
+
 jobs:
   build:
     runs-on: ubuntu-latest
-    permissions:
-      contents: write # Crucial: Allows the bot to update your feed
+    
+    # Opt-in to Node 24 early to avoid deprecation warnings
+    env:
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+      GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+
     steps:
-      - uses: actions/checkout@v4
-      - name: Run Script
-        env:
-          GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+      - name: Checkout Repository
+        uses: actions/checkout@v6 # Updated for Node 24 support
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+
+      - name: Run Architect Script
         run: python send_intel.py
 
-      - name: Commit Progress
+      - name: Commit & Push Progress
         run: |
           git config --global user.name "Architect-Bot"
           git config --global user.email "bot@github.com"
           git add progress.json docs/index.md
-          git commit -m "Day Update" || echo "No changes"
+          git commit -m "🚀 Day Update [skip ci]" || echo "No changes to commit"
           git push
 
       - name: Setup Pages
-        uses: actions/configure-pages@v4
+        uses: actions/configure-pages@v5
 
-      - name: Upload artifact
+      - name: Upload Artifact
         uses: actions/upload-pages-artifact@v3
         with:
-          path: './docs' # This points to your scrollable feed folder
+          path: './docs'
 
       - name: Deploy to GitHub Pages
         id: deployment
