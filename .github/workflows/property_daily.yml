@@ -4,6 +4,11 @@ on:
     - cron: '0 1 * * *' # 8 PM EST
   workflow_dispatch:
 
+permissions:
+  contents: write   # Allows pushing commits to the repo
+  pages: write      # Allows deploying to GitHub Pages
+  id-token: write   # Required for secure OIDC deployment
+
 jobs:
   build:
     runs-on: ubuntu-latest
