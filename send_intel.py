@@ -2,6 +2,7 @@ import os
 import json
 import requests
 import time
+import markdown
 from datetime import datetime
 
 # --- HELPER FUNCTIONS ---
@@ -99,22 +100,38 @@ for model in ordered_targets:
 
 # 5. Output and State Update
 if intel:
-    # 1. Clean the string for HTML (Senior Pro-tip: Do this outside the f-string)
-    html_intel = intel.replace('\n', '<br>')
+    # 1. Convert Markdown to clean HTML
+    # extensions=['fenced_code', 'codehilite'] makes code blocks look great
+    html_body = markdown.markdown(intel, extensions=['fenced_code', 'tables'])
 
-    # 2. Append to your "Social Feed"
+    # 2. Define a Professional CSS Theme
+    style = """
+    <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif; 
+               line-height: 1.6; color: #24292e; max-width: 850px; margin: 0 auto; padding: 40px 20px; background-color: #f6f8fa; }
+        .card { background: white; border: 1px solid #e1e4e8; border-radius: 8px; padding: 32px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); margin-bottom: 24px; }
+        h1 { border-bottom: 1px solid #eaecef; padding-bottom: 0.3em; color: #0366d6; }
+        h2 { color: #24292e; margin-top: 24px; }
+        code { background-color: rgba(27,31,35,0.05); padding: 0.2em 0.4em; border-radius: 3px; font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace; font-size: 85%; }
+        pre { background-color: #f6f8fa; padding: 16px; border-radius: 6px; overflow: auto; border: 1px solid #dfe1e4; }
+        pre code { background-color: transparent; padding: 0; }
+        blockquote { border-left: 0.25em solid #dfe1e4; color: #6a737d; padding: 0 1em; margin: 0; }
+        hr { height: 0.25em; background-color: #e1e4e8; border: 0; margin: 40px 0; }
+        .meta { color: #586069; font-size: 0.9em; margin-bottom: 16px; }
+    </style>
+    """
+
+    # 3. Write as a self-contained card
     with open('docs/index.html', 'a') as f:
         f.write(f"""
-        <div style="font-family: sans-serif; max-width: 800px; margin: auto; padding: 20px; border-bottom: 1px solid #eee;">
-            <h1 style="color: #2c3e50;">🚀 Day {state['day']}: {current_pillar}</h1>
-            <p style="color: #666;"><em>Generated via {successful_model} on {datetime.now().strftime('%Y-%m-%d')}</em></p>
-            <div style="line-height: 1.6; color: #333;">
-                {html_intel}
-            </div>
+        {style if state['day'] == 1 else ""} 
+        <div class="card">
+            <div class="meta">Day {state['day']} • {successful_model} • {datetime.now().strftime('%Y-%m-%d')}</div>
+            {html_body}
         </div>
         """)
     
-    # 3. Save State
+    # 4. Save State
     state['day'] += 1
     state['pillar_idx'] = (state['pillar_idx'] + 1) % len(PILLARS)
     with open(PROGRESS_FILE, 'w') as f:
