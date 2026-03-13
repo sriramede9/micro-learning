@@ -1,0 +1,25 @@
+name: Asset Architect Daily
+on:
+  schedule:
+    - cron: '0 1 * * *' # 8 PM EST
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    env:
+      FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+      GEMINI_API_KEY: ${{ secrets.GEMINI_API_KEY }}
+    steps:
+      - uses: actions/checkout@v6
+      - uses: actions/setup-python@v6
+        with:
+          python-version: '3.12'
+      - run: pip install requests
+      - run: python property_intel.py
+      - run: |
+          git config --global user.name "Asset-Bot"
+          git config --global user.email "bot@github.com"
+          git add property_progress.json docs/property.html
+          git commit -m "🏠 Property Update [skip ci]" || echo "No changes"
+          git push
