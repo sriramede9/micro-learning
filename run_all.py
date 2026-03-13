@@ -1,4 +1,5 @@
-import os
+import subprocess
+import sys
 
 scripts = [
     "scripts/appraisal_engine.py",
@@ -10,8 +11,15 @@ scripts = [
     "scripts/radar_system.py",
 ]
 
-for s in scripts:
-    print(f"🚀 Running {s}...")
-    os.system(f"python {s}")
+python = sys.executable
 
-os.system("python scripts/build_dashboard.py")
+for s in scripts:
+    print(f"🚀 EXECUTING: {s}", flush=True)
+    # Using subprocess.run is cleaner for GitHub Actions than os.system
+    result = subprocess.run([python, s])
+    
+    if result.returncode != 0:
+        print(f"❌ {s} failed with exit code {result.returncode}", flush=True)
+
+print("🎨 Finalizing Dashboard...", flush=True)
+subprocess.run([python, "scripts/build_dashboard.py"])
