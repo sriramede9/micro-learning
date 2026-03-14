@@ -5,6 +5,7 @@ import time
 import markdown
 from datetime import datetime
 
+
 # --- HELPER FUNCTIONS ---
 
 def get_live_models(api_key):
@@ -21,6 +22,7 @@ def get_live_models(api_key):
         print(f"⚠️ Failed to fetch models: {e}")
         return []
 
+
 def call_gemini(api_key, model_name, prompt):
     """Attempt a single API call."""
     # model_name already contains 'models/', so we just append the method
@@ -30,6 +32,7 @@ def call_gemini(api_key, model_name, prompt):
         return response.json()
     except Exception as e:
         return {"error": {"message": str(e)}}
+
 
 # --- MAIN LOGIC ---
 
@@ -43,7 +46,7 @@ with open(PROGRESS_FILE, 'r') as f:
     state = json.load(f)
 
 PILLARS = [
-    "Modern Java (17-26) & Performance", 
+    "Modern Java (17-26) & Performance",
     "GCP & AWS Cloud Native Architecture",
     "Distributed Systems & Payment Reliability",
     "Spring AI & Enterprise RAG",
@@ -69,8 +72,8 @@ Format:
 
 # 3. Model Preference (High to Low)
 MODEL_PRIORITY = [
-    'models/gemini-3-flash-preview', 
-    'models/gemini-2.5-flash', 
+    'models/gemini-3-flash-preview',
+    'models/gemini-2.5-flash',
     'models/gemini-2.0-flash'
 ]
 
@@ -87,7 +90,7 @@ successful_model = None
 for model in ordered_targets:
     print(f"🤖 Trying model: {model}...")
     data = call_gemini(api_key, model, prompt)
-    
+
     if 'candidates' in data and data['candidates']:
         intel = data['candidates'][0]['content']['parts'][0]['text']
         successful_model = model
@@ -98,45 +101,34 @@ for model in ordered_targets:
         # ADDED: Quota/Rate Limit handling
         if error.get('code') == 429:
             print(f"⏳ Quota hit on {model}. Waiting 5s for backoff...")
-            time.sleep(5) 
+            time.sleep(5)
         else:
             print(f"⚠️ {model} failed: {error.get('message', 'Unknown Error')}")
             time.sleep(1)
-            
-# 5. Output and State Update
+
+# --- 5. Output and State Update ---
+
 if intel:
-    # 1. Convert Markdown to clean HTML
-    # extensions=['fenced_code', 'codehilite'] makes code blocks look great
-    html_body = markdown.markdown(intel, extensions=['fenced_code', 'tables'])
+    # 1. Prepare the Markdown content with frontmatter for the builder
+    md_report = f"""# {current_pillar} (Day {state['day']})
+> **Focus:** {successful_model} • Generated {datetime.now().strftime('%Y-%m-%d')}
 
-    # 2. Define a Professional CSS Theme
-    style = """
-    <style>
-        body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif; 
-               line-height: 1.6; color: #24292e; max-width: 850px; margin: 0 auto; padding: 40px 20px; background-color: #f6f8fa; }
-        .card { background: white; border: 1px solid #e1e4e8; border-radius: 8px; padding: 32px; box-shadow: 0 1px 3px rgba(0,0,0,0.1); margin-bottom: 24px; }
-        h1 { border-bottom: 1px solid #eaecef; padding-bottom: 0.3em; color: #0366d6; }
-        h2 { color: #24292e; margin-top: 24px; }
-        code { background-color: rgba(27,31,35,0.05); padding: 0.2em 0.4em; border-radius: 3px; font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace; font-size: 85%; }
-        pre { background-color: #f6f8fa; padding: 16px; border-radius: 6px; overflow: auto; border: 1px solid #dfe1e4; }
-        pre code { background-color: transparent; padding: 0; }
-        blockquote { border-left: 0.25em solid #dfe1e4; color: #6a737d; padding: 0 1em; margin: 0; }
-        hr { height: 0.25em; background-color: #e1e4e8; border: 0; margin: 40px 0; }
-        .meta { color: #586069; font-size: 0.9em; margin-bottom: 16px; }
-    </style>
-    """
+{intel}
 
-    # 3. Write as a self-contained card
-    with open('docs/index.html', 'a') as f:
-        f.write(f"""
-        {style if state['day'] == 1 else ""} 
-        <div class="card">
-            <div class="meta">Day {state['day']} • {successful_model} • {datetime.now().strftime('%Y-%m-%d')}</div>
-            {html_body}
-        </div>
-        """)
-    
-    # 4. Save State
+---
+*Principal Engineer Intelligence Pipeline — 2026*
+"""
+
+    # 2. Ensure reports directory exists
+    os.makedirs('reports', exist_ok=True)
+
+    # 3. Write to architect.md (Overwrite mode)
+    with open('reports/architect.md', 'w') as f:
+        f.write(md_report)
+
+    print(f"✅ Intelligence captured: reports/architect.md using {successful_model}")
+
+    # 4. Save Progress State
     state['day'] += 1
     state['pillar_idx'] = (state['pillar_idx'] + 1) % len(PILLARS)
     with open(PROGRESS_FILE, 'w') as f:

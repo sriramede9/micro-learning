@@ -29,7 +29,7 @@ md = f"""# Weekly Intelligence Report
 """
 
 # Save to the markdown file
-with open("docs/weekly.md", "w") as f:
+with open("reports/weekly.md", "w") as f:
     f.write(md)
 
 print("Weekly report successfully generated: docs/weekly.md")

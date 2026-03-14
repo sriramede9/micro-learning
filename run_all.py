@@ -6,9 +6,13 @@ from scripts.utils.limiter import GlobalRateLimiter
 limiter = GlobalRateLimiter(rpm_limit=5) # Being conservative for Free Tier
 
 scripts = [
+    "scripts/weekly_briefing.py",
     "scripts/appraisal_engine.py",
+    "scripts/market_radar.py",
+    "scripts/catalyst_tracker.py",
     "scripts/policy_scanner.py",
-    "scripts/property_intel.py",  # Heavy Logic
+    "scripts/mortgage_optimizer.py",
+    "scripts/property_intel.py",
     "scripts/radar_system.py"
 ]
 
@@ -23,7 +27,7 @@ for script in scripts:
     print("💎 Preparing for High-Value Analysis. Clearing API buffers (45s)...")
     time.sleep(45)
     result = subprocess.run(["python", script])
-    
+
     if result.returncode != 0:
         print(f"❌ {script} failed. Switching to cooldown mode...")
         time.sleep(30) # Hard reset cooldown if we hit a wall
@@ -32,3 +36,5 @@ for script in scripts:
     time.sleep(5) 
 
 print("🎨 Finalizing Dashboard...")
+subprocess.run(["python", "scripts/build_dashboard.py"])
+print("✅ Dashboard built.")
