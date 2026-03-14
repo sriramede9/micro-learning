@@ -20,6 +20,8 @@ for script in scripts:
     
     # STEP 2: Execute script
     print(f"📡 Executing: {script}")
+    print("💎 Preparing for High-Value Analysis. Clearing API buffers (45s)...")
+    time.sleep(45)
     result = subprocess.run(["python", script])
     
     if result.returncode != 0:
