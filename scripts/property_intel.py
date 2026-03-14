@@ -27,17 +27,15 @@ def get_live_models(api_key):
     url = f"https://generativelanguage.googleapis.com/v1beta/models?key={api_key}"
     try:
         response = requests.get(url, timeout=10)
-        models_data = response.json()
-        return [m['name'] for m in models_data.get('models', [])
+        return [m['name'] for m in response.json().get('models', [])
                 if 'generateContent' in m.get('supportedGenerationMethods', [])]
-    except Exception as e:
-        print(f"⚠️ Failed to fetch models: {e}")
+    except:
         return []
 
 def call_gemini(api_key, model_name, prompt_text):
     url = f"https://generativelanguage.googleapis.com/v1beta/{model_name}:generateContent?key={api_key}"
     try:
-        response = requests.post(url, json={"contents": [{"parts": [{"text": prompt_text}]}]}, timeout=30)
+        response = requests.post(url, json={"contents": [{"parts": [{"text": prompt_text}]}]}, timeout=45)
         return response.json()
     except Exception as e:
         return {"error": {"message": str(e)}}
@@ -51,32 +49,39 @@ ordered_targets = [m for m in MODEL_PRIORITY if m in available] or available[:3]
 intel = None
 successful_model = None
 
+# NEW: Double-layer loop (Models x Retries)
 for model in ordered_targets:
-    print(f"🤖 Trying model: {model}...")
-    data = call_gemini(api_key, model, prompt)
+    if intel: break 
     
-    if 'candidates' in data and data['candidates']:
-        intel = data['candidates'][0]['content']['parts'][0]['text']
-        successful_model = model
-        print(f"✅ Success with {successful_model}!")
-        break
-    else:
+    print(f"🤖 Target Model: {model}")
+    
+    for attempt in range(3):  # 3 attempts per model
+        data = call_gemini(api_key, model, prompt)
+        
+        if 'candidates' in data and data['candidates']:
+            intel = data['candidates'][0]['content']['parts'][0]['text']
+            successful_model = model
+            print(f"✅ Success on attempt {attempt + 1}!")
+            break
+        
         error = data.get('error', {})
         if error.get('code') == 429:
-            print(f"⏳ Rate Limit (429) hit on {model}. Sleeping 5s...")
-            time.sleep(5)
+            # Exponential backoff: 30s, 60s, 90s
+            wait_time = (attempt + 1) * 30 
+            print(f"⏳ TPM/RPM Limit hit. Backing off for {wait_time}s...")
+            time.sleep(wait_time)
         else:
             print(f"⚠️ {model} failed: {error.get('message', 'Unknown Error')}")
-            time.sleep(1)
+            break # If it's not a rate limit, don't waste time retrying this model
 
 if intel:
     nav = "[💼 CAREER](index.md) | **[🏠 ASSET TRACKER](property.md)**\n\n---\n"
-    md_content = f"{nav}\n# 384 Lolita: 2026 Equity Masterplan\n\n**Refreshed:** {datetime.now()}\n\n{intel}\n\n---\n*Confidential Investment Intelligence*"
+    md_content = f"{nav}\n# 384 Lolita: 2026 Equity Masterplan\n\n**Refreshed:** {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n\n{intel}\n\n---\n*Confidential Investment Intelligence — Generated via {successful_model}*"
     
     os.makedirs('reports', exist_ok=True)
     with open('reports/property.md', 'w') as f:
         f.write(md_content)
     print("✅ Intelligence Report generated: reports/property.md")
 else:
-    print("🚨 All models exhausted for Property Intel.")
+    print("🚨 All models and retries exhausted.")
     exit(1)
