@@ -1,6 +1,6 @@
 # Appraisal Intelligence
 
-**Generated:** 2026-03-14 21:24:05
+**Generated:** 2026-03-16 14:29:05
 
 ## Property Profile
 - **Address:** 384 Lolita Gardens
@@ -10,13 +10,17 @@
 - Lot frontage 46.7 ft
 - Lot depth 121 ft
 - Detached 2-storey house
-- Finished basement with kitchen
+- Finished 2 bedroom legal basement with kitchen
 - Parking capacity for 7 vehicles
 - R3 zoning classification
 - Transit proximity (LRT + GO)
 - Hospital employment hub proximity
 - Highway access (403/QEW)
 - Neighborhood growth indicators
+- walk in closet
+- Open House Kitchen
+- Family room
+- Ensuite bathroom
 
 ---
 
