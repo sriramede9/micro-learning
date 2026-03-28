@@ -1,5 +1,5 @@
 # 📡 Neighborhood Radar (1km Radius)
-Generated: 2026-03-27
+Generated: 2026-03-28
 
 ## 🏗️ Active Development & Intensification
 - **600-620 Lolita Gardens**: 25-storey Residential (Proposed)
