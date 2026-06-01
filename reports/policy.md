@@ -1,6 +1,6 @@
 # Housing Policy Opportunities
 
-**Generated:** 2026-05-31 05:18:40
+**Generated:** 2026-06-01 06:00:24
 
 ## Legislative & Regulatory Matrix
 
