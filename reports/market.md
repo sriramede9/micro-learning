@@ -1,7 +1,7 @@
 
 # Market Radar
 
-Generated: 2026-06-01 05:58:44.399191
+Generated: 2026-06-02 05:29:00.873009
 
 ## Comparable Properties
 - 2551 Privet Crescent — Mississauga
